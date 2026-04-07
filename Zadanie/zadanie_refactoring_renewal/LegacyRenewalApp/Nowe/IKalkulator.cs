@@ -35,6 +35,4 @@ public class Kalkulator : IKalkulator
         }
         return  (discountAmount, notes);
     }
-    
-    public (decimal Amount, string Notes) CalculateDiscount(Customer customer, SubscriptionPlan plan,)
 }
