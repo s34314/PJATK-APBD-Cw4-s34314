@@ -19,15 +19,17 @@ namespace LegacyRenewalApp
         private readonly ICustomerRepository _customerRepository;
         private readonly ISubscriptionPlanRepository _planRepository;
         private readonly IBillingService _billingService;
+        private readonly IKalkulator _kalkulator;
 
         public SubscriptionRenewalService(ICustomerRepository customerRepository,
-            ISubscriptionPlanRepository planRepository, IBillingService billingService)
+            ISubscriptionPlanRepository planRepository, IBillingService billingService, IKalkulator kalkulator)
         {
             
             _customerRepository = customerRepository;
             _planRepository = planRepository;
             _billingService = billingService;
-            
+            _kalkulator = kalkulator;
+
         }//zrobilo problem z Program.cs (Main) Coś z 2... () nwm
 
 
@@ -73,31 +75,30 @@ namespace LegacyRenewalApp
             }
 
             decimal baseAmount = (plan.MonthlyPricePerSeat * seatCount * 12m) + plan.SetupFee;
-            decimal discountAmount = 0m;
-            string notes = string.Empty;
 
-            //switch case
+            var (discountAmount, notes) = _kalkulator.CalculateDiscount(customer, plan, baseAmount);
 
-            switch (customer.Segment, plan.IsEducationEligible)
-            {
-                case ("Silver",_):
-                    discountAmount += baseAmount * 0.05m;
-                    notes += "silver discount; ";
-                    break;
-                case ("Gold",_):
-                    discountAmount += baseAmount * 0.10m;
-                    notes += "gold discount; ";
-                    break;
-                case ("Platinum",_):
-                    discountAmount += baseAmount * 0.15m;
-                    notes += "platinum discount; ";
-                    break;
-                case ("Education", true):
-                    discountAmount += baseAmount * 0.20m;
-                    notes += "education discount; ";
-                    break;
-                
-            }
+            // //switch case
+            // switch (customer.Segment, plan.IsEducationEligible)
+            // {
+            //     case ("Silver",_):
+            //         discountAmount += baseAmount * 0.05m;
+            //         notes += "silver discount; ";
+            //         break;
+            //     case ("Gold",_):
+            //         discountAmount += baseAmount * 0.10m;
+            //         notes += "gold discount; ";
+            //         break;
+            //     case ("Platinum",_):
+            //         discountAmount += baseAmount * 0.15m;
+            //         notes += "platinum discount; ";
+            //         break;
+            //     case ("Education", true):
+            //         discountAmount += baseAmount * 0.20m;
+            //         notes += "education discount; ";
+            //         break;
+            //     
+            // }
             
             // if (customer.Segment == "Silver")
             // {
