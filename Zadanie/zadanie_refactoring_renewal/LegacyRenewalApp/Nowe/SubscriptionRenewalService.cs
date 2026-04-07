@@ -18,14 +18,19 @@ namespace LegacyRenewalApp
     {
         private readonly ICustomerRepository _customerRepository;
         private readonly ISubscriptionPlanRepository _planRepository;
+        private readonly IBillingService _billingService;
 
         public SubscriptionRenewalService(ICustomerRepository customerRepository,
-            ISubscriptionPlanRepository planRepository)
+            ISubscriptionPlanRepository planRepository, IBillingService billingService)
         {
+            
             _customerRepository = customerRepository;
             _planRepository = planRepository;
+            _billingService = billingService;
+            
         }//zrobilo problem z Program.cs (Main) Coś z 2... () nwm
-        
+
+
         
         
         public RenewalInvoice CreateRenewalInvoice(
@@ -320,7 +325,7 @@ namespace LegacyRenewalApp
                 GeneratedAt = DateTime.UtcNow
             };
 
-            LegacyBillingGateway.SaveInvoice(invoice);
+            _billingService.SaveInvoice(invoice);
 
             if (!string.IsNullOrWhiteSpace(customer.Email))
             {
@@ -329,7 +334,7 @@ namespace LegacyRenewalApp
                     $"Hello {customer.FullName}, your renewal for plan {normalizedPlanCode} " +
                     $"has been prepared. Final amount: {invoice.FinalAmount:F2}.";
 
-                LegacyBillingGateway.SendEmail(customer.Email, subject, body);
+                _billingService.SentMessage(customer.Email, subject, body);
             }
 
             return invoice;
