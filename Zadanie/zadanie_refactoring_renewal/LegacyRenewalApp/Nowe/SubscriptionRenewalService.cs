@@ -1,4 +1,4 @@
-// Oczekiwania wobec refaktoryzacji
+﻿// Oczekiwania wobec refaktoryzacji
 // Student powinien:
 //
 // ładnie podzielić kod na odpowiedzialności,
