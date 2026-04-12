@@ -21,6 +21,13 @@ namespace LegacyRenewalApp
         private readonly IBillingService _billingService;
         private readonly IKalkulator _kalkulator;
 
+        public SubscriptionRenewalService() 
+            : this(new CustomerRepository(), 
+                new SubscriptionPlanRepository(), 
+                new IBillingServiceAdapter(), 
+                new Kalkulator())
+        {}
+        
         public SubscriptionRenewalService(ICustomerRepository customerRepository,
             ISubscriptionPlanRepository planRepository, IBillingService billingService, IKalkulator kalkulator)
         {
