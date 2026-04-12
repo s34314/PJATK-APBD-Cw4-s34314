@@ -134,22 +134,22 @@ namespace LegacyRenewalApp
 
             //switch case
 
-            switch (seatCount)
-            {
-                case >= 50:
-                    discountAmount += baseAmount * 0.12m;
-                    notes += "large team discount; ";
-                    break;
-                case >= 20:
-                    discountAmount += baseAmount * 0.08m;
-                    notes += "medium team discount; ";
-                    break;
-                case >= 10:
-                    discountAmount += baseAmount * 0.04m;
-                    notes += "small team discount; ";
-                    break;
-                    
-            }
+            // switch (seatCount)
+            // {
+            //     case >= 50:
+            //         discountAmount += baseAmount * 0.12m;
+            //         notes += "large team discount; ";
+            //         break;
+            //     case >= 20:
+            //         discountAmount += baseAmount * 0.08m;
+            //         notes += "medium team discount; ";
+            //         break;
+            //     case >= 10:
+            //         discountAmount += baseAmount * 0.04m;
+            //         notes += "small team discount; ";
+            //         break;
+            //         
+            // }
             
             // if (seatCount >= 50)
             // {
@@ -167,6 +167,10 @@ namespace LegacyRenewalApp
             //     notes += "small team discount; ";
             // }
 
+            var (seatDiscount, seatNotes) = _kalkulator.CalculateSeats(seatCount, baseAmount);
+            discountAmount += seatDiscount;
+            notes += seatNotes;
+            
             if (useLoyaltyPoints && customer.LoyaltyPoints > 0)
             {
                 int pointsToUse = customer.LoyaltyPoints > 200 ? 200 : customer.LoyaltyPoints;
@@ -181,25 +185,29 @@ namespace LegacyRenewalApp
                 notes += "minimum discounted subtotal applied; ";
             }
 
-            decimal supportFee = 0m;
-                //switch case
+            var (paymentMethodSupportDiscount, paymentMethodSupportNotes) = _kalkulator.CalculatePaymentMethod(paymentMethod, includePremiumSupport);
+            decimal supportFee = paymentMethodSupportDiscount;
+            notes += paymentMethodSupportNotes;
             
-                
-            if (includePremiumSupport)
-            {
-                switch (normalizedPlanCode)
-                {
-                    case "SUPPORT":
-                        supportFee = 250m;
-                        break;
-                    case "PRO":
-                        supportFee = 400m;
-                        break;
-                    case "ENTERPRISE":
-                        supportFee = 700m;
-                        break;
-                }
-                notes += "premium support included; ";
+            // decimal supportFee = 0m;
+            //     //switch case
+            //
+            //     
+            // if (includePremiumSupport)
+            // {
+            //     switch (normalizedPlanCode)
+            //     {
+            //         case "SUPPORT":
+            //             supportFee = 250m;
+            //             break;
+            //         case "PRO":
+            //             supportFee = 400m;
+            //             break;
+            //         case "ENTERPRISE":
+            //             supportFee = 700m;
+            //             break;
+            //     }
+            //     notes += "premium support included; ";
                 
                 // if (normalizedPlanCode == "START")
                 // {
@@ -215,34 +223,37 @@ namespace LegacyRenewalApp
                 // }
                 //
                 // notes += "premium support included; ";
-            }
-
-            decimal paymentFee = 0m;
+            // }
             
             //switch case
+            
+            
+            decimal taxBaseWithoutPaymentFee = subtotalAfterDiscount + supportFee;
+            
+            var (paymentFee, paymentNotes) = _kalkulator.CalculatePaymentFee(normalizedPaymentMethod, taxBaseWithoutPaymentFee);
+            notes += paymentNotes;
 
-            switch (normalizedPaymentMethod)
-            {
-                case "CARD" :
-                    paymentFee = (subtotalAfterDiscount + supportFee) * 0.02m;
-                    notes += "card payment fee; ";
-                    break;
-                case "BANK_TRANSFER":
-                    paymentFee = (subtotalAfterDiscount + supportFee) * 0.01m;
-                    notes += "bank transfer fee; ";
-                    break;
-                case "PAYPAL":
-                    paymentFee = (subtotalAfterDiscount + supportFee) * 0.035m;
-                    notes += "paypal fee; ";
-                    break;
-                case "INVOICE":
-                    paymentFee = 0m;
-                    notes += "invoice payment; ";
-                    break;
-                default:
-                    throw new ArgumentException("Unsupported payment method");
-                    break;
-            }
+            // switch (normalizedPaymentMethod)
+            // {
+            //     case "CARD" :
+            //         paymentFee = (subtotalAfterDiscount + supportFee) * 0.02m;
+            //         notes += "card payment fee; ";
+            //         break;
+            //     case "BANK_TRANSFER":
+            //         paymentFee = (subtotalAfterDiscount + supportFee) * 0.01m;
+            //         notes += "bank transfer fee; ";
+            //         break;
+            //     case "PAYPAL":
+            //         paymentFee = (subtotalAfterDiscount + supportFee) * 0.035m;
+            //         notes += "paypal fee; ";
+            //         break;
+            //     case "INVOICE":
+            //         paymentFee = 0m;
+            //         notes += "invoice payment; ";
+            //         break;
+            //     default:
+            //         throw new ArgumentException("Unsupported payment method");
+            // }
             
             // if (normalizedPaymentMethod == "CARD")
             // {
@@ -269,18 +280,22 @@ namespace LegacyRenewalApp
             //     throw new ArgumentException("Unsupported payment method");
             // }
 
-            decimal taxRate = 0.20m;
+            decimal taxBase = subtotalAfterDiscount + supportFee + paymentFee;
+            var (taxAmount, _) = _kalkulator.CalculateTax(customer.Country, taxBase);
+            decimal finalAmount = taxBase + taxAmount;
             
-            //switch case
-            
-            taxRate = customer.Country switch
-            {
-                "Poland"         => 0.23m,
-                "Germany"        => 0.19m,
-                "Czech Republic" => 0.21m,
-                "Norway"         => 0.25m,
-                _                => 0.00m
-            };
+            // decimal taxRate = 0.20m;
+            //
+            // //switch case
+            //
+            // taxRate = customer.Country switch
+            // {
+            //     "Poland"         => 0.23m,
+            //     "Germany"        => 0.19m,
+            //     "Czech Republic" => 0.21m,
+            //     "Norway"         => 0.25m,
+            //     _                => 0.00m
+            // };
             
             // if (customer.Country == "Poland")
             // {
@@ -298,10 +313,7 @@ namespace LegacyRenewalApp
             // {
             //     taxRate = 0.25m;
             // }
-
-            decimal taxBase = subtotalAfterDiscount + supportFee + paymentFee;
-            decimal taxAmount = taxBase * taxRate;
-            decimal finalAmount = taxBase + taxAmount;
+            
 
             if (finalAmount < 500m)
             {
